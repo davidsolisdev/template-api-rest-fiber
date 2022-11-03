@@ -1,8 +1,10 @@
-package authControllers
+package authController
 
 import (
+	"strings"
 	"time"
 
+	"github.com/davidsolisdev/template-api-rest-fiber/models"
 	"github.com/davidsolisdev/template-api-rest-fiber/utils"
 	validate "github.com/go-playground/validator/v10"
 	"github.com/gofiber/fiber/v2"
@@ -10,15 +12,48 @@ import (
 	"gorm.io/gorm"
 )
 
+var db *gorm.DB
+
+type BodyRegister struct {
+	Name           string `json:"name" validate:"required,min=5"`
+	LastName       string `json:"lastName" validate:"required,min=5"`
+	Email          string `json:"email" validate:"required,min=5"`
+	PassWord       string `json:"password" validate:"required,min=8"`
+	RepeatPassWord string `json:"repeatPassword" validate:"required,min=8"`
+}
+
 type BodyLogin struct {
-	UserName string `json:"userName" validate:"required,min=2"`
+	Email    string `json:"email" validate:"required,min=5"`
 	PassWord string `json:"password" validate:"required,min=8"`
 }
 
-var DB *gorm.DB
+func RegisterUser(ctx *fiber.Ctx, validator *validate.Validate) error {
+	// * body validation
+	var body *BodyRegister = new(BodyRegister)
+	err := ctx.BodyParser(&body)
+	if err != nil {
+		return ctx.Status(400).SendString("Los datos enviados son incorrectos")
+	}
+	err = validator.Struct(body)
+	if err != nil {
+		return ctx.Status(400).SendString("Los datos enviados son incorrectos")
+	}
+	// * password comparison
+	body.PassWord = strings.TrimSpace(body.PassWord)
+	body.RepeatPassWord = strings.TrimSpace(body.RepeatPassWord)
+	if body.PassWord != body.RepeatPassWord {
+		return ctx.Status(400).SendString("Las contraseñas no son iguales")
+	}
+
+	return ctx.SendStatus(200)
+}
+
+func RegisterModerator(ctx *fiber.Ctx, validator *validate.Validate) error {
+	return ctx.SendStatus(200)
+}
 
 func Login(ctx *fiber.Ctx, validator *validate.Validate) error {
-	//Parse and validate body request
+	// * parse and validate body request
 	var body *BodyLogin = new(BodyLogin)
 	err := ctx.BodyParser(body)
 	if err != nil {
@@ -29,12 +64,22 @@ func Login(ctx *fiber.Ctx, validator *validate.Validate) error {
 		return ctx.Status(400).SendString(errorValidate.Error())
 	}
 
-	// find user for userName
-	//user := DB.Where().Find()
+	// * find user for email
+	var user *models.User = new(models.User)
+	tx := db.Table("users").Select("password").Where("email = ?", body.Email).First(&user)
+	if tx.Error != nil {
+		return ctx.Status(400).SendString("Los datos enviados son invalidos")
+	}
 
-	// Create token
+	// * password comprobation
+	comprobation := utils.CompareHashedPassword(body.PassWord, user.Password)
+	if !comprobation {
+		return ctx.Status(400).SendString("Los datos enviados son invalidos")
+	}
+
+	// * create token
 	token, err := utils.CreateToken(utils.ClaimsJwt{
-		Id: "",
+		Id: user.Id,
 		RegisteredClaims: jwt.RegisteredClaims{
 			ExpiresAt: jwt.NewNumericDate(time.Now().Add(time.Hour * 10)),
 		},
@@ -43,9 +88,9 @@ func Login(ctx *fiber.Ctx, validator *validate.Validate) error {
 		return ctx.Status(500).SendString("Error del servidor al crear el token")
 	}
 
-	// Create and set token on response cookie
+	// * create and set token on response cookie
 	var cookieAuth fiber.Cookie = fiber.Cookie{
-		Name:     "Authentication",
+		Name:     "Authorization",
 		Value:    token,
 		Path:     "/",
 		Expires:  time.Now().Add(time.Hour * 10),
@@ -54,5 +99,17 @@ func Login(ctx *fiber.Ctx, validator *validate.Validate) error {
 	}
 	ctx.Cookie(&cookieAuth)
 
+	return ctx.Status(200).SendString(token)
+}
+
+func RecoverPassword(ctx *fiber.Ctx, validator *validate.Validate) error {
+	return ctx.SendStatus(200)
+}
+
+func ChangePassword(ctx *fiber.Ctx, validator *validate.Validate) error {
+	return ctx.SendStatus(200)
+}
+
+func ChangeEmail(ctx *fiber.Ctx, validator *validate.Validate) error {
 	return ctx.SendStatus(200)
 }

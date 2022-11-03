@@ -10,22 +10,22 @@ import (
 )
 
 func App() (app *fiber.App) {
-	//inicialization
+	// inicialization
 	app = fiber.New(fiber.Config{Prefork: true})
 	var validator *validate.Validate = validate.New()
 
-	//middlewares
+	// middlewares
 	app.Use(cors.New(cors.Config{}))
 	app.Use(recover.New(recover.Config{}))
 
-	//routes without auth
+	// * routes without auth
 	var appPublic fiber.Router = app.Group("/api")
 
 	routes.AuthRoutes(appPublic, validator)
 
-	//routes with auth
+	// * routes with auth
 	//var appPrivate fiber.Router = app.Group("/api", middlewares.AuthMiddleware())
 
-	//return configured server
+	// return configured server
 	return app
 }

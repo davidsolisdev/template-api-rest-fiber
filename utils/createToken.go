@@ -7,7 +7,7 @@ import (
 )
 
 type ClaimsJwt struct {
-	Id string `json:"id"`
+	Id uint `json:"id"`
 	jwt.RegisteredClaims
 }
 
