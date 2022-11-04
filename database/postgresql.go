@@ -3,7 +3,7 @@ package database
 import (
 	"os"
 
-	"github.com/davidsolisdev/template-api-rest-fiber/helpers"
+	"github.com/davidsolisdev/template-api-rest-fiber/utils"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
@@ -20,7 +20,7 @@ func ConnectPostqreSql() {
 		Logger: logger.Default.LogMode(logger.Info),
 	})
 	if err != nil {
-		helpers.ErrorDatabase("PostgreSql", err)
+		utils.ErrorDatabase("PostgreSql", err)
 	}
 
 	//db.AutoMigrate(&models.User{})

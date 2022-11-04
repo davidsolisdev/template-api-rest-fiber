@@ -3,7 +3,7 @@ package database
 import (
 	"os"
 
-	"github.com/davidsolisdev/template-api-rest-fiber/helpers"
+	"github.com/davidsolisdev/template-api-rest-fiber/utils"
 	"gorm.io/driver/sqlserver"
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
@@ -20,7 +20,7 @@ func ConnectMsSql() {
 		Logger: logger.Default.LogMode(logger.Info),
 	})
 	if err != nil {
-		helpers.ErrorDatabase("Sql Server", err)
+		utils.ErrorDatabase("Sql Server", err)
 	}
 
 	//db.AutoMigrate(&models.User{})

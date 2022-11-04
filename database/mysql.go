@@ -3,7 +3,7 @@ package database
 import (
 	"os"
 
-	"github.com/davidsolisdev/template-api-rest-fiber/helpers"
+	"github.com/davidsolisdev/template-api-rest-fiber/utils"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
@@ -20,7 +20,7 @@ func ConnectMySql() {
 		Logger: logger.Default.LogMode(logger.Info),
 	})
 	if err != nil {
-		helpers.ErrorDatabase("MySql", err)
+		utils.ErrorDatabase("MySql", err)
 	}
 
 	//db.AutoMigrate(&models.User{})

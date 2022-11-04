@@ -1,28 +1,45 @@
 package utils
 
-import "net/smtp"
+import (
+	"github.com/davidsolisdev/template-api-rest-fiber/config"
 
-type Email struct {
-	From     string
-	Password string
-	To       []string
-	Message  string
-	HostSMTP string
-	PortSMTP string
+	mail "github.com/xhit/go-simple-mail/v2"
+)
+
+type NewEmail struct {
+	From    string
+	To      string
+	Subject string
 }
 
-func SendEmail(email *Email) (err error) {
-	if len(email.HostSMTP) < 5 {
-		email.HostSMTP = "smtp.gmail.com"
+func SendEmail(email *NewEmail, bodyHtml string) (bool, error) {
+	// configure default data
+	if len(email.From) < 5 {
+		email.From = "example@gmail.com"
+	}
+	// conecting mail server
+	smtp, err := config.SmtpClient()
+	if err != nil {
+		return false, err
 	}
 
-	if len(email.PortSMTP) < 2 {
-		email.PortSMTP = "587"
+	// create new mail
+	var eMail *mail.Email = mail.NewMSG()
+	eMail.SetFrom(email.From)
+	eMail.AddTo(email.To)
+	eMail.SetSubject(email.Subject)
+	eMail.SetBody(mail.TextHTML, bodyHtml)
+
+	// comprobate mail
+	if eMail.Error != nil {
+		return false, eMail.Error
 	}
 
-	var auth smtp.Auth = smtp.PlainAuth("", email.From, email.Password, email.HostSMTP)
+	// send mail
+	err = eMail.Send(smtp)
+	if err != nil {
+		return false, err
+	}
 
-	err = smtp.SendMail(email.HostSMTP+":"+email.PortSMTP, auth, email.From, email.To, []byte(email.Message))
-
-	return err
+	return true, err
 }
