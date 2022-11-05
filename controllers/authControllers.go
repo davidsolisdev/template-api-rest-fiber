@@ -33,6 +33,13 @@ func RegisterUser(ctx *fiber.Ctx, validator *validate.Validate) error {
 		return ctx.Status(400).SendString("Las contraseñas no son iguales")
 	}
 
+	// * check if user exists
+	var user *models.User = new(models.User)
+	findTx := db.Where("email = ?", body.Email).First(&user)
+	if findTx.Error == nil {
+		return ctx.Status(400).SendString("El usuario ya existe")
+	}
+
 	// * create new user without confirmed email
 	tx := db.Table("users").Create(&models.User{
 		Id:                   0,
@@ -77,6 +84,13 @@ func RegisterModerator(ctx *fiber.Ctx, validator *validate.Validate) error {
 		return ctx.Status(400).SendString("Las contraseñas no son iguales")
 	}
 
+	// * check if user exists
+	var user *models.User = new(models.User)
+	findTx := db.Where("email = ?", body.Email).First(&user)
+	if findTx.Error == nil {
+		return ctx.Status(400).SendString("El usuario ya existe")
+	}
+
 	// * create new user without confirmed email
 	tx := db.Table("users").Create(&models.User{
 		Id:                   0,
@@ -106,7 +120,7 @@ func RegisterModerator(ctx *fiber.Ctx, validator *validate.Validate) error {
 
 func EmailConfirmation(ctx *fiber.Ctx, validator *validate.Validate) error {
 	// * validate body
-	var body *ParamsConfirmMail = new(ParamsConfirmMail)
+	var body *BodyConfirmMail = new(BodyConfirmMail)
 	err := ctx.BodyParser(&body)
 	if err != nil {
 		return ctx.Status(400).SendString("Los datos enviados son invalidos")
@@ -114,7 +128,7 @@ func EmailConfirmation(ctx *fiber.Ctx, validator *validate.Validate) error {
 
 	// * find user for email
 	var user *models.User = new(models.User)
-	tx := db.Table("users").Select("id", "confirmed_email_secret").Where("email = ?", body.Email).First(user)
+	tx := db.Table("users").Select("id", "confirmed_email_secret").Where("email = ?", body.Email).First(&user)
 	if tx.Error != nil {
 		return ctx.Status(400).SendString("Los datos enviados son invalidos")
 	}
@@ -186,10 +200,30 @@ func Login(ctx *fiber.Ctx, validator *validate.Validate) error {
 }
 
 func RecoverPassword(ctx *fiber.Ctx, validator *validate.Validate) error {
-	return ctx.SendStatus(200)
+	// * body validation
+	var body *BodyRecoverPassword = new(BodyRecoverPassword)
+	err := ctx.BodyParser(&body)
+	if err != nil {
+		return ctx.Status(400).SendString("Los datos enviados son incorrectos")
+	}
+	err = validator.Struct(body)
+	if err != nil {
+		return ctx.Status(400).SendString("Los datos enviados son incorrectos")
+	}
+
+	// * send recover password mail
+	var bodyEmail string = static.EmailRecoverPassword()
+	_, err = utils.SendEmail(&utils.NewEmail{To: body.Email, Subject: "Recuperación de contraseña"}, bodyEmail)
+	if err != nil {
+		utils.ErrorEndPoint("recover password", err)
+		return ctx.Status(500).SendString("Error interno al enviar el correo, intenta de nuevo")
+	}
+
+	return ctx.Status(200).SendString("Correo de recuperación ha sido enviado")
 }
 
 func ChangePassword(ctx *fiber.Ctx, validator *validate.Validate) error {
+
 	return ctx.SendStatus(200)
 }
 
@@ -210,7 +244,16 @@ type BodyLogin struct {
 	Password string `json:"password" validate:"required,min=8"`
 }
 
-type ParamsConfirmMail struct {
-	Email string
-	Id    string
+type BodyConfirmMail struct {
+	Email string `json:"email" validate:"required,min=5"`
+	Id    string `json:"id" validate:"required,min=5"`
+}
+
+type BodyRecoverPassword struct {
+	Email string `json:"email" validate:"required,min=5"`
+}
+
+type BodyChangePassword struct {
+	Newpassword       string `json:"newPassword" validate:"required,min=8"`
+	RepeatNewPassword string `json:"repeatNewPassword" validate:"required,min=8"`
 }
