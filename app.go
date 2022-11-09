@@ -11,20 +11,20 @@ import (
 	"github.com/joho/godotenv"
 )
 
-// @title           Swagger Example API
+// @title           Example API Rest with Fiber
 // @version         1.0
-// @description     This is a sample server celler server.
-// @termsOfService  http://swagger.io/terms/
+// @description     This is a sample API Rest with best practices.
+// @termsOfService  http://myDomain/terms
 
-// @contact.name   API Support
-// @contact.url    http://www.swagger.io/support
-// @contact.email  support@swagger.io
+// @contact.name   Support
+// @contact.url    http://myDomain.com/support
+// @contact.email  support@myDomain.com
 
-// @license.name  Apache 2.0
-// @license.url   http://www.apache.org/licenses/LICENSE-2.0.html
+// @license.name  MIT
+// @license.url   https://github.com/davidsolisdev/template-api-rest-fiber/blob/main/LICENSE
 
-// @host      localhost:8080
-// @BasePath  /api/v1
+// @host      localhost:3005
+// @BasePath  /api
 
 // @securityDefinitions.basic  BasicAuth
 func App() (app *fiber.App) {
