@@ -2,6 +2,7 @@ package main
 
 import (
 	//"github.com/davidsolisdev/template-api-rest-fiber/database"
+	swagger "github.com/arsmn/fiber-swagger/v2"
 	"github.com/davidsolisdev/template-api-rest-fiber/middlewares"
 	"github.com/davidsolisdev/template-api-rest-fiber/routes"
 	validate "github.com/go-playground/validator/v10"
@@ -23,13 +24,21 @@ import (
 // @license.name  MIT
 // @license.url   https://github.com/davidsolisdev/template-api-rest-fiber/blob/main/LICENSE
 
+// @tag.name This is the name of the tag
+// @tag.description Cool Description
+// @tag.docs.url https://myDomain.com/docs
+// @tag.docs.description Best example documentation
+
 // @host      localhost:3005
 // @BasePath  /api
+// @accept json
+// @produce json
+// @schemes https
 
 // @securityDefinitions.basic  BasicAuth
 func App() (app *fiber.App) {
 	// ! development only!
-	err := godotenv.Load()
+	err := godotenv.Load(".env")
 	if err != nil {
 		panic(err)
 	}
@@ -47,6 +56,9 @@ func App() (app *fiber.App) {
 	// middlewares
 	app.Use(cors.New(cors.Config{}))
 	app.Use(recover.New(recover.Config{}))
+
+	// ! Swagger
+	app.Get("/docs/*", swagger.HandlerDefault)
 
 	// * --------------------------- routes without auth ---------------------------
 	var appPublic fiber.Router = app.Group("/api")

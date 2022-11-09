@@ -1,4 +1,4 @@
-package authController
+package controllers
 
 import (
 	"os"
@@ -16,6 +16,15 @@ import (
 
 var db *gorm.DB
 
+// @Summary Registrar Usuario
+// @Description Ruta para creación de usuarios normales
+// @Tags Auth
+// @Accept json
+// @Produce json
+// @Success 200 {array} models.User
+// @Failure 400 {string} string
+// @Failure 500 {string} string
+// @Router /register-user [post]
 func RegisterUser(ctx *fiber.Ctx, validator *validate.Validate) error {
 	// * body validation
 	var body *BodyRegister = new(BodyRegister)
