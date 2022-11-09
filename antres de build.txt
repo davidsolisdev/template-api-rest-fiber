@@ -33,7 +33,9 @@ go install github.com/swaggo/swag/cmd/swag@latest
 
 go get -u github.com/arsmn/fiber-swagger/v2
 
-swag init
+correr el siguiente comando en la carpeta que contiene el proyecto:
+
+/home/$USER/go/bin/swag init
 
 
 // development

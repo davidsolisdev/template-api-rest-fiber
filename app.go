@@ -3,6 +3,7 @@ package main
 import (
 	//"github.com/davidsolisdev/template-api-rest-fiber/database"
 	swagger "github.com/arsmn/fiber-swagger/v2"
+	_ "github.com/davidsolisdev/template-api-rest-fiber/docs"
 	"github.com/davidsolisdev/template-api-rest-fiber/middlewares"
 	"github.com/davidsolisdev/template-api-rest-fiber/routes"
 	validate "github.com/go-playground/validator/v10"
@@ -12,30 +13,29 @@ import (
 	"github.com/joho/godotenv"
 )
 
-// @title           Example API Rest with Fiber
-// @version         1.0
-// @description     This is a sample API Rest with best practices.
-// @termsOfService  http://myDomain/terms
+// @title Example API Rest with Fiber
+// @version 1.0
+// @description This is a sample API Rest with best practices.
+// @termsOfService http://myDomain/terms
 
-// @contact.name   Support
-// @contact.url    http://myDomain.com/support
-// @contact.email  support@myDomain.com
+// @contact.name Support
+// @contact.url http://myDomain.com/support
+// @contact.email support@myDomain.com
 
-// @license.name  MIT
-// @license.url   https://github.com/davidsolisdev/template-api-rest-fiber/blob/main/LICENSE
+// @license.name MIT
+// @license.url https://github.com/davidsolisdev/template-api-rest-fiber/blob/main/LICENSE
 
 // @tag.name This is the name of the tag
 // @tag.description Cool Description
 // @tag.docs.url https://myDomain.com/docs
 // @tag.docs.description Best example documentation
 
-// @host      localhost:3005
-// @BasePath  /api
+// @host localhost:3005
+// @schemes https
+// @BasePath /api
 // @accept json
 // @produce json
-// @schemes https
-
-// @securityDefinitions.basic  BasicAuth
+// @securityDefinitions.apikey ApiKeyAuth
 func App() (app *fiber.App) {
 	// ! development only!
 	err := godotenv.Load(".env")

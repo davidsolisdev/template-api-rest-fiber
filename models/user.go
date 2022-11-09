@@ -2,8 +2,6 @@ package models
 
 import (
 	"time"
-
-	"gorm.io/gorm"
 )
 
 type User struct {
@@ -19,5 +17,5 @@ type User struct {
 	CodeRecoverPassword  string
 	Created              time.Time
 	Updated              time.Time
-	Deleted              gorm.DeletedAt `gorm:"index"`
+	Deleted              time.Time `gorm:"index"`
 }

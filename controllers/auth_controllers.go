@@ -21,7 +21,8 @@ var db *gorm.DB
 // @Tags Auth
 // @Accept json
 // @Produce json
-// @Success 200 {array} models.User
+// @Param Body body controllers.BodyRegister true "Body peticion"
+// @Success 200 {string} string
 // @Failure 400 {string} string
 // @Failure 500 {string} string
 // @Router /register-user [post]
@@ -76,6 +77,16 @@ func RegisterUser(ctx *fiber.Ctx, validator *validate.Validate) error {
 	return ctx.Status(200).SendString("Usuario creado con exito")
 }
 
+// @Summary Registrar Usuario Moderador
+// @Description Ruta para creación de usuarios moderadores
+// @Tags Auth
+// @Accept json
+// @Produce json
+// @Param Body body controllers.BodyRegister true "Body peticion"
+// @Success 200 {string} string
+// @Failure 400 {string} string
+// @Failure 500 {string} string
+// @Router /register-moderator [post]
 func RegisterModerator(ctx *fiber.Ctx, validator *validate.Validate) error {
 	// * body validation
 	var body *BodyRegister = new(BodyRegister)
@@ -127,6 +138,15 @@ func RegisterModerator(ctx *fiber.Ctx, validator *validate.Validate) error {
 	return ctx.Status(200).SendString("Moderador creado con exito")
 }
 
+// @Summary Confirmar email del usuario
+// @Description Ruta para confirmar el correo electronico
+// @Tags Auth
+// @Accept json
+// @Produce json
+// @Param Body body controllers.BodyConfirmMail true "Body peticion"
+// @Success 200 {string} string
+// @Failure 400 {string} string
+// @Router /email-confirmation [post]
 func EmailConfirmation(ctx *fiber.Ctx, validator *validate.Validate) error {
 	// * validate body
 	var body *BodyConfirmMail = new(BodyConfirmMail)
@@ -157,6 +177,16 @@ func EmailConfirmation(ctx *fiber.Ctx, validator *validate.Validate) error {
 	return ctx.Status(200).SendString("¡Correo confirmado!")
 }
 
+// @Summary Login de usuarios
+// @Description Ruta para ingresar al sistema
+// @Tags Auth
+// @Accept json
+// @Produce json
+// @Param Body body controllers.BodyLogin true "Body peticion"
+// @Success 200 {string} string
+// @Failure 400 {string} string
+// @Failure 500 {string} string
+// @Router /login [post]
 func Login(ctx *fiber.Ctx, validator *validate.Validate) error {
 	// * parse and validate body request
 	var body *BodyLogin = new(BodyLogin)
@@ -208,6 +238,16 @@ func Login(ctx *fiber.Ctx, validator *validate.Validate) error {
 	return ctx.Status(200).SendString(token)
 }
 
+// @Summary Recuperar contraseña
+// @Description Ruta para recuperar la contraseña del usuario
+// @Tags Auth
+// @Accept json
+// @Produce json
+// @Param Body body controllers.BodyRecoverPassword true "Body peticion"
+// @Success 200 {string} string
+// @Failure 400 {string} string
+// @Failure 500 {string} string
+// @Router /recover-password [post]
 func RecoverPassword(ctx *fiber.Ctx, validator *validate.Validate) error {
 	// * body validation
 	var body *BodyRecoverPassword = new(BodyRecoverPassword)
@@ -231,6 +271,17 @@ func RecoverPassword(ctx *fiber.Ctx, validator *validate.Validate) error {
 	return ctx.Status(200).SendString("Correo de recuperación ha sido enviado")
 }
 
+// @Summary Cambiar contraseña
+// @Description Ruta para cambiar la contraseña del usuario
+// @Tags Auth
+// @Accept json
+// @Produce json
+// @Param Body body controllers.BodyChangePassword true "Body peticion"
+// @Success 200 {string} string
+// @Failure 400 {string} string
+// @Failure 401 {string} string
+// @Failure 500 {string} string
+// @Router /change-password [post]
 func ChangePassword(ctx *fiber.Ctx, validator *validate.Validate) error {
 	// * body validation
 	var body *BodyChangePassword = new(BodyChangePassword)
@@ -292,6 +343,17 @@ func ChangePassword(ctx *fiber.Ctx, validator *validate.Validate) error {
 	return ctx.Status(200).SendString("¡Se ha cambiado la contraseña satisfactoriamente!")
 }
 
+// @Summary Cambiar email
+// @Description Ruta para cambiar el correo del usuario
+// @Tags Auth
+// @Accept json
+// @Produce json
+// @Param Body body controllers.BodyChangeEmail true "Body peticion"
+// @Success 200 {string} string
+// @Failure 400 {string} string
+// @Failure 401 {string} string
+// @Failure 500 {string} string
+// @Router /change-email [post]
 func ChangeEmail(ctx *fiber.Ctx, validator *validate.Validate) error {
 	// * body validation
 	var body *BodyChangeEmail = new(BodyChangeEmail)
@@ -353,14 +415,14 @@ type BodyRegister struct {
 	RepeatPassword string `json:"repeatPassword" validate:"required,min=8"`
 }
 
-type BodyLogin struct {
-	Email    string `json:"email" validate:"required,min=5"`
-	Password string `json:"password" validate:"required,min=8"`
-}
-
 type BodyConfirmMail struct {
 	Email string `json:"email" validate:"required,min=5"`
 	Id    string `json:"id" validate:"required,min=5"`
+}
+
+type BodyLogin struct {
+	Email    string `json:"email" validate:"required,min=5"`
+	Password string `json:"password" validate:"required,min=8"`
 }
 
 type BodyRecoverPassword struct {

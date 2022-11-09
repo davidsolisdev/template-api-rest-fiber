@@ -7,10 +7,11 @@ import "github.com/gofiber/fiber/v2"
 // @Tags books
 // @Accept json
 // @Produce json
-// @Param id path int true "Book ID"
-// @Success 200 {object} ResponseHTTP{data=[]models.example}
-// @Failure 401 {object} ResponseHTTP{}
-// @Failure 503 {object} ResponseHTTP{}
+// @Param id path int true "User ID"
+// @Param Body body controllers.BodyRegister true "Body peticion"
+// @Success 200 {object} models.User
+// @Failure 401 {string} string "Titulo del estado"
+// @Failure 503 {array} string
 // @Router /v1/books/{id} [get]
 func Get(ctx *fiber.Ctx) error {
 
