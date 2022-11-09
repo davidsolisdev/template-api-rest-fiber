@@ -223,12 +223,117 @@ func RecoverPassword(ctx *fiber.Ctx, validator *validate.Validate) error {
 }
 
 func ChangePassword(ctx *fiber.Ctx, validator *validate.Validate) error {
+	// * body validation
+	var body *BodyChangePassword = new(BodyChangePassword)
+	err := ctx.BodyParser(&body)
+	if err != nil {
+		return ctx.Status(400).SendString("Los datos enviados son incorrectos")
+	}
+	err = validator.Struct(body)
+	if err != nil {
+		return ctx.Status(400).SendString("Los datos enviados son incorrectos")
+	}
 
-	return ctx.SendStatus(200)
+	// * get token of cookies
+	var token string = ctx.Cookies("Authorization")
+	if len(token) < 8 {
+		return ctx.Status(401).SendString("No has enviado tu token")
+	}
+
+	// * extract data of token
+	dataToken, err := utils.DecodedToken(token)
+	if err != nil {
+		return ctx.Status(400).SendString("Ha ocurrido un error con tu token")
+	}
+
+	// * password comparison
+	if body.Newpassword != body.RepeatNewPassword {
+		return ctx.Status(400).SendString("Las contraseñas no son iguales")
+	}
+
+	// * find user for id
+	var user *models.User = new(models.User)
+	tx := db.Select("created", "password").Where("id = ?", dataToken.Id).First(&user)
+	if tx.Error != nil {
+		utils.ErrorEndPoint("chage password", err)
+		return ctx.Status(400).SendString("Ha ocurrido un error")
+	}
+
+	// * encrypt new password
+	password, err := utils.EncryptPassword(body.RepeatNewPassword)
+	if err != nil {
+		utils.ErrorEndPoint("chage password > encrypt new password", err)
+		return ctx.Status(500).SendString("Ha ocurrido un error al cambiar la contraseña")
+	}
+
+	// * change last password
+	tx = db.Table("users").Where("id = ?", dataToken.Id).UpdateColumn("last_password", user.Password)
+	if tx.Error != nil {
+		utils.ErrorEndPoint("chage password > change last password", err)
+		return ctx.Status(500).SendString("Ha ocurrido un error al cambiar la contraseña")
+	}
+
+	// * change password
+	txNew := db.Table("users").Where("id = ?", dataToken.Id).UpdateColumn("password", password)
+	if txNew.Error != nil {
+		utils.ErrorEndPoint("chage password > change password", err)
+		return ctx.Status(500).SendString("Ha ocurrido un error al cambiar la contraseña")
+	}
+
+	return ctx.Status(200).SendString("¡Se ha cambiado la contraseña satisfactoriamente!")
 }
 
 func ChangeEmail(ctx *fiber.Ctx, validator *validate.Validate) error {
-	return ctx.SendStatus(200)
+	// * body validation
+	var body *BodyChangeEmail = new(BodyChangeEmail)
+	err := ctx.BodyParser(&body)
+	if err != nil {
+		return ctx.Status(400).SendString("Los datos enviados son incorrectos")
+	}
+	err = validator.Struct(body)
+	if err != nil {
+		return ctx.Status(400).SendString("Los datos enviados son incorrectos")
+	}
+
+	// * get token of cookies
+	var token string = ctx.Cookies("Authorization")
+	if len(token) < 8 {
+		return ctx.Status(401).SendString("No has enviado tu token")
+	}
+
+	// * extract data of token
+	dataToken, err := utils.DecodedToken(token)
+	if err != nil {
+		return ctx.Status(400).SendString("Ha ocurrido un error con tu token")
+	}
+
+	// * email comparison
+	if body.NewEmail != body.RepeatNewEmail {
+		return ctx.Status(400).SendString("Los emails no son iguales")
+	}
+
+	// * change confirmed_email
+	tx := db.Table("users").Where("id = ?", dataToken.Id).UpdateColumn("confirmed_email", false)
+	if tx.Error != nil {
+		utils.ErrorEndPoint("chage email > change confirmed_email = false", err)
+		return ctx.Status(500).SendString("Ha ocurrido un error al cambiar la contraseña")
+	}
+
+	// * change confirmed_email_secret
+	tx = db.Table("users").Where("id = ?", dataToken.Id).UpdateColumn("confirmed_email_secret", uuid.NewString())
+	if tx.Error != nil {
+		utils.ErrorEndPoint("chage email > change confirmed_email_secret", err)
+		return ctx.Status(500).SendString("Ha ocurrido un error al cambiar la contraseña")
+	}
+
+	// * change email
+	txNew := db.Table("users").Where("id = ?", dataToken.Id).UpdateColumn("email", body.RepeatNewEmail)
+	if txNew.Error != nil {
+		utils.ErrorEndPoint("chage email > change email", err)
+		return ctx.Status(500).SendString("Ha ocurrido un error al cambiar la contraseña")
+	}
+
+	return ctx.Status(200).SendString("¡Se ha cambiado el email satisfactoriamente!")
 }
 
 type BodyRegister struct {
@@ -256,4 +361,9 @@ type BodyRecoverPassword struct {
 type BodyChangePassword struct {
 	Newpassword       string `json:"newPassword" validate:"required,min=8"`
 	RepeatNewPassword string `json:"repeatNewPassword" validate:"required,min=8"`
+}
+
+type BodyChangeEmail struct {
+	NewEmail       string `json:"newEmail" validate:"required,min=8"`
+	RepeatNewEmail string `json:"repeatNewEmail" validate:"required,min=8"`
 }

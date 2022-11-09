@@ -11,9 +11,9 @@ type User struct {
 	Name                 string `json:"name" validate:"required,min=3"`
 	LastName             string `json:"lastName" validate:"required,min=3"`
 	Email                string `json:"email" validate:"required,min=5" gorm:"column:email"`
-	Password             string `json:"password" validate:"required,min=8"`
+	Password             string `validate:"required,min=8"`
 	LastPassword         string
-	Role                 string `json:"role" gorm:"column:role"`
+	Role                 string
 	ConfirmedEmail       bool
 	ConfirmedEmailSecret string
 	CodeRecoverPassword  string
