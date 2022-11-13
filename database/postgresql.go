@@ -10,9 +10,7 @@ import (
 	//"github.com/davidalarcon68/ApiRest/models"
 )
 
-var DBPostgres *gorm.DB
-
-func ConnectPostqreSql() {
+func ConnectPostqreSql() (DBPostgres *gorm.DB) {
 	var err error
 	var dsn string = "host=" + os.Getenv("HOSTDB") + " user=" + os.Getenv("USERDB") + " password='" + os.Getenv("PASSWORDDB") + "' dbname=" + os.Getenv("DB") + " port=" + os.Getenv("PORTDB") + " sslmode=disable TimeZone=Asia/Shanghai"
 
@@ -24,4 +22,6 @@ func ConnectPostqreSql() {
 	}
 
 	//db.AutoMigrate(&models.User{})
+
+	return DBPostgres
 }

@@ -1,8 +1,8 @@
 package main
 
 import (
-	//"github.com/davidsolisdev/template-api-rest-fiber/database"
 	swagger "github.com/arsmn/fiber-swagger/v2"
+	"github.com/davidsolisdev/template-api-rest-fiber/database"
 	_ "github.com/davidsolisdev/template-api-rest-fiber/docs"
 	"github.com/davidsolisdev/template-api-rest-fiber/middlewares"
 	"github.com/davidsolisdev/template-api-rest-fiber/routes"
@@ -47,7 +47,7 @@ func App() (app *fiber.App) {
 	// * connect to db
 	//database.ConnectMsSql()
 	//database.ConnectMySql()
-	//database.ConnectPostqreSql()
+	database.ConnectPostqreSql()
 
 	// inicialization
 	app = fiber.New(fiber.Config{Prefork: true})
@@ -61,12 +61,12 @@ func App() (app *fiber.App) {
 	app.Get("/docs/*", swagger.HandlerDefault)
 
 	// * --------------------------- routes without auth ---------------------------
-	var appPublic fiber.Router = app.Group("/api")
+	var appPublic fiber.Router = app.Group("/")
 
 	routes.AuthRoutes(appPublic, validator)
 
 	// * --------------------------- routes with auth ---------------------------
-	var appPrivate fiber.Router = app.Group("/api", middlewares.AuthMiddleware())
+	var appPrivate fiber.Router = app.Group("/", middlewares.AuthMiddleware())
 
 	routes.ChangeUserDataRoutes(appPrivate, validator)
 

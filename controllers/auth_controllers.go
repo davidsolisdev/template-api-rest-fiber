@@ -4,6 +4,7 @@ import (
 	"os"
 	"time"
 
+	"github.com/davidsolisdev/template-api-rest-fiber/database"
 	"github.com/davidsolisdev/template-api-rest-fiber/models"
 	"github.com/davidsolisdev/template-api-rest-fiber/static"
 	"github.com/davidsolisdev/template-api-rest-fiber/utils"
@@ -11,10 +12,7 @@ import (
 	"github.com/gofiber/fiber/v2"
 	"github.com/golang-jwt/jwt/v4"
 	"github.com/google/uuid"
-	"gorm.io/gorm"
 )
-
-var db *gorm.DB
 
 // @Summary Registrar Usuario
 // @Description Ruta para creación de usuarios normales
@@ -45,13 +43,15 @@ func RegisterUser(ctx *fiber.Ctx, validator *validate.Validate) error {
 
 	// * check if user exists
 	var user *models.User = new(models.User)
-	findTx := db.Where("email = ?", body.Email).First(&user)
+	db := database.ConnectPostqreSql()
+	findTx := db.Select("created").Where("email = ?", body.Email).First(&user)
 	if findTx.Error == nil {
 		return ctx.Status(400).SendString("El usuario ya existe")
 	}
 
 	// * create new user without confirmed email
-	tx := db.Table("users").Create(&models.User{
+	dbr := database.ConnectPostqreSql()
+	tx := dbr.Table("users").Create(&models.User{
 		Id:                   0,
 		Name:                 body.Name,
 		LastName:             body.LastName,
@@ -60,6 +60,8 @@ func RegisterUser(ctx *fiber.Ctx, validator *validate.Validate) error {
 		Role:                 os.Getenv("role_user"),
 		ConfirmedEmail:       false,
 		ConfirmedEmailSecret: uuid.NewString(),
+		Created:              time.Now(),
+		Updated:              time.Now(),
 	})
 	if tx.Error != nil {
 		utils.ErrorEndPoint("register user", tx.Error)
@@ -88,6 +90,7 @@ func RegisterUser(ctx *fiber.Ctx, validator *validate.Validate) error {
 // @Failure 500 {string} string
 // @Router /register-moderator [post]
 func RegisterModerator(ctx *fiber.Ctx, validator *validate.Validate) error {
+	db := database.ConnectPostqreSql()
 	// * body validation
 	var body *BodyRegister = new(BodyRegister)
 	err := ctx.BodyParser(&body)
@@ -106,7 +109,7 @@ func RegisterModerator(ctx *fiber.Ctx, validator *validate.Validate) error {
 
 	// * check if user exists
 	var user *models.User = new(models.User)
-	findTx := db.Where("email = ?", body.Email).First(&user)
+	findTx := db.Select("created").Where("email = ?", body.Email).First(&user)
 	if findTx.Error == nil {
 		return ctx.Status(400).SendString("El usuario ya existe")
 	}
@@ -121,6 +124,8 @@ func RegisterModerator(ctx *fiber.Ctx, validator *validate.Validate) error {
 		Role:                 os.Getenv("role_moderator"),
 		ConfirmedEmail:       false,
 		ConfirmedEmailSecret: uuid.NewString(),
+		Created:              time.Now(),
+		Updated:              time.Now(),
 	})
 	if tx.Error != nil {
 		utils.ErrorEndPoint("register moderator", tx.Error)
@@ -148,6 +153,7 @@ func RegisterModerator(ctx *fiber.Ctx, validator *validate.Validate) error {
 // @Failure 400 {string} string
 // @Router /email-confirmation [post]
 func EmailConfirmation(ctx *fiber.Ctx, validator *validate.Validate) error {
+	db := database.ConnectPostqreSql()
 	// * validate body
 	var body *BodyConfirmMail = new(BodyConfirmMail)
 	err := ctx.BodyParser(&body)
@@ -188,6 +194,7 @@ func EmailConfirmation(ctx *fiber.Ctx, validator *validate.Validate) error {
 // @Failure 500 {string} string
 // @Router /login [post]
 func Login(ctx *fiber.Ctx, validator *validate.Validate) error {
+	db := database.ConnectPostqreSql()
 	// * parse and validate body request
 	var body *BodyLogin = new(BodyLogin)
 	err := ctx.BodyParser(body)
@@ -283,6 +290,7 @@ func RecoverPassword(ctx *fiber.Ctx, validator *validate.Validate) error {
 // @Failure 500 {string} string
 // @Router /change-password [post]
 func ChangePassword(ctx *fiber.Ctx, validator *validate.Validate) error {
+	db := database.ConnectPostqreSql()
 	// * body validation
 	var body *BodyChangePassword = new(BodyChangePassword)
 	err := ctx.BodyParser(&body)
@@ -355,6 +363,7 @@ func ChangePassword(ctx *fiber.Ctx, validator *validate.Validate) error {
 // @Failure 500 {string} string
 // @Router /change-email [post]
 func ChangeEmail(ctx *fiber.Ctx, validator *validate.Validate) error {
+	db := database.ConnectPostqreSql()
 	// * body validation
 	var body *BodyChangeEmail = new(BodyChangeEmail)
 	err := ctx.BodyParser(&body)
