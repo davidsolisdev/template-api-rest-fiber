@@ -14,7 +14,7 @@ import (
 	"github.com/google/uuid"
 )
 
-var db = database.ConnectPostqreSql()
+var Db = database.ConnectPostqreSql()
 
 // @Summary Registrar Usuario
 // @Description Ruta para creación de usuarios normales
@@ -45,7 +45,7 @@ func RegisterUser(ctx *fiber.Ctx, validator *validate.Validate) error {
 
 	// * check if user exists
 	var user *models.User = new(models.User)
-	findTx := db.Select("created").Where("email = ?", body.Email).First(&user)
+	findTx := Db.Select("created").Where("email = ?", body.Email).First(&user)
 	if findTx.Error == nil {
 		return ctx.Status(400).SendString("El usuario ya existe")
 	}
@@ -58,7 +58,7 @@ func RegisterUser(ctx *fiber.Ctx, validator *validate.Validate) error {
 	}
 
 	// * create new user without confirmed email
-	tx := db.Table("users").Create(&models.User{
+	tx := Db.Table("users").Create(&models.User{
 		Id:                   0,
 		Name:                 body.Name,
 		LastName:             body.LastName,
@@ -115,7 +115,7 @@ func RegisterModerator(ctx *fiber.Ctx, validator *validate.Validate) error {
 
 	// * check if user exists
 	var user *models.User = new(models.User)
-	findTx := db.Select("created").Where("email = ?", body.Email).First(&user)
+	findTx := Db.Select("created").Where("email = ?", body.Email).First(&user)
 	if findTx.Error == nil {
 		return ctx.Status(400).SendString("El usuario ya existe")
 	}
@@ -128,7 +128,7 @@ func RegisterModerator(ctx *fiber.Ctx, validator *validate.Validate) error {
 	}
 
 	// * create new user without confirmed email
-	tx := db.Table("users").Create(&models.User{
+	tx := Db.Table("users").Create(&models.User{
 		Id:                   0,
 		Name:                 body.Name,
 		LastName:             body.LastName,
@@ -175,7 +175,7 @@ func EmailConfirmation(ctx *fiber.Ctx, validator *validate.Validate) error {
 
 	// * find user for email
 	var user *models.User = new(models.User)
-	tx := db.Table("users").Select("id", "confirmed_email_secret").Where("email = ?", body.Email).First(&user)
+	tx := Db.Table("users").Select("id", "confirmed_email_secret").Where("email = ?", body.Email).First(&user)
 	if tx.Error != nil {
 		return ctx.Status(400).SendString("Los datos enviados son invalidos")
 	}
@@ -186,7 +186,7 @@ func EmailConfirmation(ctx *fiber.Ctx, validator *validate.Validate) error {
 	}
 
 	// * update user with confirmed email
-	txUpdate := db.Where("id = ?", user.Id).UpdateColumn("confirmed_email", true)
+	txUpdate := Db.Where("id = ?", user.Id).UpdateColumn("confirmed_email", true)
 	if tx.Error != nil {
 		utils.ErrorEndPoint("confirmate email", txUpdate.Error)
 		return ctx.Status(400).SendString("Los datos enviados son invalidos")
@@ -219,7 +219,7 @@ func Login(ctx *fiber.Ctx, validator *validate.Validate) error {
 
 	// * find user for email
 	var user *models.User = new(models.User)
-	tx := db.Table("users").Select("password").Where("email = ?", body.Email).First(&user)
+	tx := Db.Table("users").Select("password").Where("email = ?", body.Email).First(&user)
 	if tx.Error != nil {
 		return ctx.Status(400).SendString("Los datos enviados son invalidos")
 	}
@@ -331,7 +331,7 @@ func ChangePassword(ctx *fiber.Ctx, validator *validate.Validate) error {
 
 	// * find user for id
 	var user *models.User = new(models.User)
-	tx := db.Select("created", "password").Where("id = ?", dataToken.Id).First(&user)
+	tx := Db.Select("created", "password").Where("id = ?", dataToken.Id).First(&user)
 	if tx.Error != nil {
 		utils.ErrorEndPoint("chage password", err)
 		return ctx.Status(400).SendString("Ha ocurrido un error")
@@ -345,14 +345,14 @@ func ChangePassword(ctx *fiber.Ctx, validator *validate.Validate) error {
 	}
 
 	// * change last password
-	tx = db.Table("users").Where("id = ?", dataToken.Id).UpdateColumn("last_password", user.Password)
+	tx = Db.Table("users").Where("id = ?", dataToken.Id).UpdateColumn("last_password", user.Password)
 	if tx.Error != nil {
 		utils.ErrorEndPoint("chage password > change last password", err)
 		return ctx.Status(500).SendString("Ha ocurrido un error al cambiar la contraseña")
 	}
 
 	// * change password
-	txNew := db.Table("users").Where("id = ?", dataToken.Id).UpdateColumn("password", password)
+	txNew := Db.Table("users").Where("id = ?", dataToken.Id).UpdateColumn("password", password)
 	if txNew.Error != nil {
 		utils.ErrorEndPoint("chage password > change password", err)
 		return ctx.Status(500).SendString("Ha ocurrido un error al cambiar la contraseña")
@@ -402,21 +402,21 @@ func ChangeEmail(ctx *fiber.Ctx, validator *validate.Validate) error {
 	}
 
 	// * change confirmed_email
-	tx := db.Table("users").Where("id = ?", dataToken.Id).UpdateColumn("confirmed_email", false)
+	tx := Db.Table("users").Where("id = ?", dataToken.Id).UpdateColumn("confirmed_email", false)
 	if tx.Error != nil {
 		utils.ErrorEndPoint("chage email > change confirmed_email = false", err)
 		return ctx.Status(500).SendString("Ha ocurrido un error al cambiar la contraseña")
 	}
 
 	// * change confirmed_email_secret
-	tx = db.Table("users").Where("id = ?", dataToken.Id).UpdateColumn("confirmed_email_secret", uuid.NewString())
+	tx = Db.Table("users").Where("id = ?", dataToken.Id).UpdateColumn("confirmed_email_secret", uuid.NewString())
 	if tx.Error != nil {
 		utils.ErrorEndPoint("chage email > change confirmed_email_secret", err)
 		return ctx.Status(500).SendString("Ha ocurrido un error al cambiar la contraseña")
 	}
 
 	// * change email
-	txNew := db.Table("users").Where("id = ?", dataToken.Id).UpdateColumn("email", body.RepeatNewEmail)
+	txNew := Db.Table("users").Where("id = ?", dataToken.Id).UpdateColumn("email", body.RepeatNewEmail)
 	if txNew.Error != nil {
 		utils.ErrorEndPoint("chage email > change email", err)
 		return ctx.Status(500).SendString("Ha ocurrido un error al cambiar la contraseña")

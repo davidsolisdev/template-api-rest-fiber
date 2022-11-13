@@ -9,7 +9,7 @@ import (
 
 func AuthMiddleware() fiber.Handler {
 	return jwtWare.New(jwtWare.Config{
-		SigningKey:     os.Getenv("Secret_Signed_Token"),
+		SigningKey:     os.Getenv("secret_signed_token"),
 		SigningMethod:  "HS256",
 		AuthScheme:     "Bearer",
 		TokenLookup:    "cookie:Authorization",
