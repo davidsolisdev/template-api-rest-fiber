@@ -14,7 +14,7 @@ type ClaimsJwt struct {
 func CreateToken(claims ClaimsJwt) (token string, err error) {
 	var tokenIncompleto *jwt.Token = jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 
-	token, err = tokenIncompleto.SignedString(os.Getenv("secret_signed_token"))
+	token, err = tokenIncompleto.SignedString(os.Getenv("SECRET_SIGNED_TOKEN"))
 	if err != nil {
 		return "", err
 	}

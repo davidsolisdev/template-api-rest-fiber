@@ -14,7 +14,7 @@ var DBMSSql *gorm.DB
 
 func ConnectMsSql() {
 	var err error
-	var dsn string = "Server=" + os.Getenv("HOSTDB") + ";Database=" + os.Getenv("DB") + ";User Id=" + os.Getenv("USERDB") + ";Password=" + os.Getenv("PASSWORDDB") + ";Encrypt=disable;TrustServerCertificate=False"
+	var dsn string = "Server=" + os.Getenv("HOST_DB") + ";Database=" + os.Getenv("DB") + ";User Id=" + os.Getenv("USER_DB") + ";Password=" + os.Getenv("PASSWORD_DB") + ";Encrypt=disable;TrustServerCertificate=False"
 
 	DBMSSql, err = gorm.Open(sqlserver.Open(dsn), &gorm.Config{
 		Logger: logger.Default.LogMode(logger.Info),

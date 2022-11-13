@@ -14,7 +14,7 @@ var DBMySql *gorm.DB
 
 func ConnectMySql() {
 	var err error
-	var dsn string = os.Getenv("USERDB") + ":" + os.Getenv("PASSWORDDB") + "@tcp(" + os.Getenv("HOSTDB") + ":" + os.Getenv("PORTDB") + ")/" + os.Getenv("DB") + "?charset=utf8mb4&parseTime=True&loc=Local"
+	var dsn string = os.Getenv("USER_DB") + ":" + os.Getenv("PASSWORD_DB") + "@tcp(" + os.Getenv("HOST_DB") + ":" + os.Getenv("PORT_DB") + ")/" + os.Getenv("DB") + "?charset=utf8mb4&parseTime=True&loc=Local"
 
 	DBMySql, err = gorm.Open(mysql.Open(dsn), &gorm.Config{
 		Logger: logger.Default.LogMode(logger.Info),
