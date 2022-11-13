@@ -10,8 +10,8 @@ import "github.com/gofiber/fiber/v2"
 // @Param id path int true "User ID"
 // @Param Body body controllers.BodyRegister true "Body peticion"
 // @Success 200 {object} models.User
-// @Failure 401 {string} string "Titulo del estado"
-// @Failure 503 {array} string
+// @Failure 400 {string} string "Titulo del estado"
+// @Failure 500 {array} string
 // @Router /v1/books/{id} [get]
 func Get(ctx *fiber.Ctx) error {
 

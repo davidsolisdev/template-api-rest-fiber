@@ -14,6 +14,8 @@ import (
 	"github.com/google/uuid"
 )
 
+var db = database.ConnectPostqreSql()
+
 // @Summary Registrar Usuario
 // @Description Ruta para creación de usuarios normales
 // @Tags Auth
@@ -43,20 +45,25 @@ func RegisterUser(ctx *fiber.Ctx, validator *validate.Validate) error {
 
 	// * check if user exists
 	var user *models.User = new(models.User)
-	db := database.ConnectPostqreSql()
 	findTx := db.Select("created").Where("email = ?", body.Email).First(&user)
 	if findTx.Error == nil {
 		return ctx.Status(400).SendString("El usuario ya existe")
 	}
 
+	// * encrypt user password
+	password, err := utils.EncryptPassword(body.RepeatPassword)
+	if err != nil {
+		utils.ErrorEndPoint("register user -> encrypt password", err)
+		return ctx.Status(500).SendString("Error al registrar al usuario")
+	}
+
 	// * create new user without confirmed email
-	dbr := database.ConnectPostqreSql()
-	tx := dbr.Table("users").Create(&models.User{
+	tx := db.Table("users").Create(&models.User{
 		Id:                   0,
 		Name:                 body.Name,
 		LastName:             body.LastName,
 		Email:                body.Email,
-		Password:             body.RepeatPassword,
+		Password:             password,
 		Role:                 os.Getenv("role_user"),
 		ConfirmedEmail:       false,
 		ConfirmedEmailSecret: uuid.NewString(),
@@ -90,7 +97,6 @@ func RegisterUser(ctx *fiber.Ctx, validator *validate.Validate) error {
 // @Failure 500 {string} string
 // @Router /register-moderator [post]
 func RegisterModerator(ctx *fiber.Ctx, validator *validate.Validate) error {
-	db := database.ConnectPostqreSql()
 	// * body validation
 	var body *BodyRegister = new(BodyRegister)
 	err := ctx.BodyParser(&body)
@@ -114,13 +120,20 @@ func RegisterModerator(ctx *fiber.Ctx, validator *validate.Validate) error {
 		return ctx.Status(400).SendString("El usuario ya existe")
 	}
 
+	// * encrypt user password
+	password, err := utils.EncryptPassword(body.RepeatPassword)
+	if err != nil {
+		utils.ErrorEndPoint("register moderator -> encrypt password", err)
+		return ctx.Status(500).SendString("Error al registrar al usuario")
+	}
+
 	// * create new user without confirmed email
 	tx := db.Table("users").Create(&models.User{
 		Id:                   0,
 		Name:                 body.Name,
 		LastName:             body.LastName,
 		Email:                body.Email,
-		Password:             body.RepeatPassword,
+		Password:             password,
 		Role:                 os.Getenv("role_moderator"),
 		ConfirmedEmail:       false,
 		ConfirmedEmailSecret: uuid.NewString(),
@@ -153,7 +166,6 @@ func RegisterModerator(ctx *fiber.Ctx, validator *validate.Validate) error {
 // @Failure 400 {string} string
 // @Router /email-confirmation [post]
 func EmailConfirmation(ctx *fiber.Ctx, validator *validate.Validate) error {
-	db := database.ConnectPostqreSql()
 	// * validate body
 	var body *BodyConfirmMail = new(BodyConfirmMail)
 	err := ctx.BodyParser(&body)
@@ -194,7 +206,6 @@ func EmailConfirmation(ctx *fiber.Ctx, validator *validate.Validate) error {
 // @Failure 500 {string} string
 // @Router /login [post]
 func Login(ctx *fiber.Ctx, validator *validate.Validate) error {
-	db := database.ConnectPostqreSql()
 	// * parse and validate body request
 	var body *BodyLogin = new(BodyLogin)
 	err := ctx.BodyParser(body)
@@ -290,7 +301,6 @@ func RecoverPassword(ctx *fiber.Ctx, validator *validate.Validate) error {
 // @Failure 500 {string} string
 // @Router /change-password [post]
 func ChangePassword(ctx *fiber.Ctx, validator *validate.Validate) error {
-	db := database.ConnectPostqreSql()
 	// * body validation
 	var body *BodyChangePassword = new(BodyChangePassword)
 	err := ctx.BodyParser(&body)
@@ -363,7 +373,6 @@ func ChangePassword(ctx *fiber.Ctx, validator *validate.Validate) error {
 // @Failure 500 {string} string
 // @Router /change-email [post]
 func ChangeEmail(ctx *fiber.Ctx, validator *validate.Validate) error {
-	db := database.ConnectPostqreSql()
 	// * body validation
 	var body *BodyChangeEmail = new(BodyChangeEmail)
 	err := ctx.BodyParser(&body)

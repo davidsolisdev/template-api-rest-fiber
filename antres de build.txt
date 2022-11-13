@@ -34,7 +34,7 @@ go install github.com/swaggo/swag/cmd/swag@latest
 go get -u github.com/arsmn/fiber-swagger/v2
 
 swag init
-/home/davidsolis/go/bin/swag init
+/home/$USER/go/bin/swag init
 
 
 // development
