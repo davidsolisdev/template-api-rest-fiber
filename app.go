@@ -10,6 +10,7 @@ import (
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/cors"
 	"github.com/gofiber/fiber/v2/middleware/recover"
+	helmet "github.com/gofiber/helmet/v2"
 	"github.com/joho/godotenv"
 )
 
@@ -54,6 +55,7 @@ func App() (app *fiber.App) {
 	var validator *validate.Validate = validate.New()
 
 	// middlewares
+	app.Use(helmet.New(helmet.Config{}))
 	app.Use(cors.New(cors.Config{}))
 	app.Use(recover.New(recover.Config{}))
 

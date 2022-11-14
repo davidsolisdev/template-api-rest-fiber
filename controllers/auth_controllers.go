@@ -242,12 +242,12 @@ func Login(ctx *fiber.Ctx, validator *validate.Validate) error {
 
 	// * create and set token on response cookie
 	var cookieAuth fiber.Cookie = fiber.Cookie{
-		Name:     "Authorization",
+		Name:     "Auth",
 		Value:    token,
 		Path:     "/",
 		Expires:  time.Now().Add(time.Hour * 10),
-		Secure:   false,
-		HTTPOnly: false,
+		Secure:   true,
+		HTTPOnly: true,
 	}
 	ctx.Cookie(&cookieAuth)
 
@@ -311,7 +311,7 @@ func ChangePassword(ctx *fiber.Ctx, validator *validate.Validate) error {
 	}
 
 	// * get token of cookies
-	var token string = ctx.Cookies("Authorization")
+	var token string = ctx.Cookies("Auth")
 	if len(token) < 8 {
 		return ctx.Status(401).SendString("No has enviado tu token")
 	}
@@ -383,7 +383,7 @@ func ChangeEmail(ctx *fiber.Ctx, validator *validate.Validate) error {
 	}
 
 	// * get token of cookies
-	var token string = ctx.Cookies("Authorization")
+	var token string = ctx.Cookies("Auth")
 	if len(token) < 8 {
 		return ctx.Status(401).SendString("No has enviado tu token")
 	}
