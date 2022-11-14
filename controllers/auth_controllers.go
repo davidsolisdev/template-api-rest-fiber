@@ -217,20 +217,20 @@ func Login(ctx *fiber.Ctx, validator *validate.Validate) error {
 
 	// * find user for email
 	var user *models.User = new(models.User)
-	tx := database.DBPostgres.Table("users").Select("password").Where("email = ?", body.Email).First(&user)
+	tx := database.DBPostgres.Table("users").Select("id", "password").Where("email = ?", body.Email).First(&user)
 	if tx.Error != nil {
 		return ctx.Status(400).SendString("Los datos enviados son invalidos")
 	}
 
 	// * password comprobation
-	comprobation := utils.CompareHashedPassword(body.Password, user.Password)
+	comprobation := utils.CompareHashedPassword(user.Password, body.Password)
 	if !comprobation {
 		return ctx.Status(400).SendString("Los datos enviados son invalidos")
 	}
 
 	// * create token
 	token, err := utils.CreateToken(utils.ClaimsJwt{
-		Id: user.Id,
+		Id: uint(user.Id),
 		RegisteredClaims: jwt.RegisteredClaims{
 			ExpiresAt: jwt.NewNumericDate(time.Now().Add(time.Hour * 10)),
 		},
