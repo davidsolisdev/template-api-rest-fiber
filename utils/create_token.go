@@ -7,7 +7,7 @@ import (
 )
 
 type ClaimsJwt struct {
-	Id uint `json:"id"`
+	Id uint
 	jwt.RegisteredClaims
 }
 
@@ -18,6 +18,5 @@ func CreateToken(claims ClaimsJwt) (token string, err error) {
 	if err != nil {
 		return "", err
 	}
-
 	return token, nil
 }
