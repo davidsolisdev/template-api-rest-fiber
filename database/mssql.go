@@ -23,5 +23,5 @@ func ConnectMsSql() {
 		utils.ErrorDatabase("Sql Server", err)
 	}
 
-	//db.AutoMigrate(&models.User{})
+	//DBMSSql.AutoMigrate(&models.User{})
 }

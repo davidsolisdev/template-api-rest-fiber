@@ -61,12 +61,12 @@ func App() (app *fiber.App) {
 	app.Get("/docs/*", swagger.HandlerDefault)
 
 	// * --------------------------- routes without auth ---------------------------
-	var appPublic fiber.Router = app.Group("/")
+	var appPublic fiber.Router = app.Group("/api")
 
 	routes.AuthRoutes(appPublic, validator)
 
 	// * --------------------------- routes with auth ---------------------------
-	var appPrivate fiber.Router = app.Group("/", middlewares.AuthMiddleware())
+	var appPrivate fiber.Router = app.Group("/api", middlewares.AuthMiddleware())
 
 	routes.ChangeUserDataRoutes(appPrivate, validator)
 

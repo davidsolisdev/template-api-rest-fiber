@@ -23,5 +23,5 @@ func ConnectMySql() {
 		utils.ErrorDatabase("MySql", err)
 	}
 
-	//db.AutoMigrate(&models.User{})
+	//DBMySql.AutoMigrate(&models.User{})
 }
