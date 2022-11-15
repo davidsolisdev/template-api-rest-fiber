@@ -1,7 +1,7 @@
 package utils
 
 import (
-	"github.com/davidsolisdev/template-api-rest-fiber/config"
+	"github.com/davidsolisdev/template-api-rest-fiber/internal/config"
 
 	mail "github.com/xhit/go-simple-mail/v2"
 )

@@ -1,7 +1,7 @@
 package routes
 
 import (
-	"github.com/davidsolisdev/template-api-rest-fiber/controllers"
+	"github.com/davidsolisdev/template-api-rest-fiber/app/controllers"
 	validate "github.com/go-playground/validator/v10"
 	"github.com/gofiber/fiber/v2"
 )

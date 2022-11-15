@@ -1,17 +1,17 @@
-package main
+package server
 
 import (
 	swagger "github.com/arsmn/fiber-swagger/v2"
-	"github.com/davidsolisdev/template-api-rest-fiber/database"
+	"github.com/davidsolisdev/template-api-rest-fiber/app/middlewares"
+	"github.com/davidsolisdev/template-api-rest-fiber/app/routes"
 	_ "github.com/davidsolisdev/template-api-rest-fiber/docs"
-	"github.com/davidsolisdev/template-api-rest-fiber/middlewares"
-	"github.com/davidsolisdev/template-api-rest-fiber/routes"
+	"github.com/davidsolisdev/template-api-rest-fiber/internal/config"
+	"github.com/davidsolisdev/template-api-rest-fiber/internal/database"
 	validate "github.com/go-playground/validator/v10"
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/cors"
 	"github.com/gofiber/fiber/v2/middleware/recover"
 	helmet "github.com/gofiber/helmet/v2"
-	"github.com/joho/godotenv"
 )
 
 // @title Example API Rest with Fiber
@@ -39,10 +39,7 @@ import (
 // @securityDefinitions.apikey ApiKeyAuth
 func App() (app *fiber.App) {
 	// ! development only!
-	err := godotenv.Load(".env")
-	if err != nil {
-		panic(err)
-	}
+	config.LoadEnv()
 	// ! development only!
 
 	// * connect to db

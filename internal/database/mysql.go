@@ -3,7 +3,7 @@ package database
 import (
 	"os"
 
-	"github.com/davidsolisdev/template-api-rest-fiber/utils"
+	"github.com/davidsolisdev/template-api-rest-fiber/pkg/utils"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"

@@ -1,4 +1,5 @@
 go.mod
 go.sum
 docs/
-__debug_bin
+cmd/__debug_bin
+cmd/docs/
