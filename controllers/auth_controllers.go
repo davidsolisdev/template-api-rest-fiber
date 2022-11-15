@@ -43,7 +43,7 @@ func RegisterUser(ctx *fiber.Ctx, validator *validate.Validate) error {
 
 	// * check if user exists
 	var user *models.User = new(models.User)
-	findTx := database.DBPostgres.Select("created").Where("email = ?", body.Email).First(&user)
+	findTx := database.DBPostgres.Table("users").Select("created").Where("email = ?", body.Email).First(user)
 	if findTx.Error == nil {
 		return ctx.Status(400).SendString("El usuario ya existe")
 	}
@@ -56,6 +56,7 @@ func RegisterUser(ctx *fiber.Ctx, validator *validate.Validate) error {
 	}
 
 	// * create new user without confirmed email
+	var confirmedemailsecret string = uuid.NewString()
 	tx := database.DBPostgres.Table("users").Create(&models.User{
 		Id:                   0,
 		Name:                 body.Name,
@@ -64,7 +65,7 @@ func RegisterUser(ctx *fiber.Ctx, validator *validate.Validate) error {
 		Password:             password,
 		Role:                 os.Getenv("ROLE_USER"),
 		ConfirmedEmail:       false,
-		ConfirmedEmailSecret: uuid.NewString(),
+		ConfirmedEmailSecret: confirmedemailsecret,
 		Created:              time.Now(),
 		Updated:              time.Now(),
 	})
@@ -74,7 +75,7 @@ func RegisterUser(ctx *fiber.Ctx, validator *validate.Validate) error {
 	}
 
 	// * send mail of confirmation
-	var mail string = static.EmailConfirmation()
+	var mail string = static.EmailConfirmation(confirmedemailsecret)
 	_, err = utils.SendEmail(&utils.NewEmail{To: body.Email, Subject: "Confirmación de correo"}, mail)
 	if err != nil {
 		utils.ErrorEndPoint("register user", err)
@@ -113,7 +114,7 @@ func RegisterModerator(ctx *fiber.Ctx, validator *validate.Validate) error {
 
 	// * check if user exists
 	var user *models.User = new(models.User)
-	findTx := database.DBPostgres.Select("created").Where("email = ?", body.Email).First(&user)
+	findTx := database.DBPostgres.Table("users").Select("created").Where("email = ?", body.Email).First(&user)
 	if findTx.Error == nil {
 		return ctx.Status(400).SendString("El usuario ya existe")
 	}
@@ -126,6 +127,7 @@ func RegisterModerator(ctx *fiber.Ctx, validator *validate.Validate) error {
 	}
 
 	// * create new user without confirmed email
+	var confirmedemailsecret string = uuid.NewString()
 	tx := database.DBPostgres.Table("users").Create(&models.User{
 		Id:                   0,
 		Name:                 body.Name,
@@ -134,7 +136,7 @@ func RegisterModerator(ctx *fiber.Ctx, validator *validate.Validate) error {
 		Password:             password,
 		Role:                 os.Getenv("ROLE_MODERATOR"),
 		ConfirmedEmail:       false,
-		ConfirmedEmailSecret: uuid.NewString(),
+		ConfirmedEmailSecret: confirmedemailsecret,
 		Created:              time.Now(),
 		Updated:              time.Now(),
 	})
@@ -144,7 +146,7 @@ func RegisterModerator(ctx *fiber.Ctx, validator *validate.Validate) error {
 	}
 
 	// * send mail of confirmation
-	var mail string = static.EmailConfirmation()
+	var mail string = static.EmailConfirmation(confirmedemailsecret)
 	_, err = utils.SendEmail(&utils.NewEmail{To: body.Email, Subject: "Confirmación de correo"}, mail)
 	if err != nil {
 		utils.ErrorEndPoint("register user", err)
@@ -159,34 +161,20 @@ func RegisterModerator(ctx *fiber.Ctx, validator *validate.Validate) error {
 // @Tags Auth
 // @Accept json
 // @Produce json
-// @Param Body body controllers.BodyConfirmMail true "Body peticion"
+// @Param id path string true "code"
 // @Success 200 {string} string
 // @Failure 400 {string} string
-// @Router /email-confirmation [post]
+// @Router /email-confirmation/{id} [get]
 func EmailConfirmation(ctx *fiber.Ctx, validator *validate.Validate) error {
-	// * validate body
-	var body *BodyConfirmMail = new(BodyConfirmMail)
-	err := ctx.BodyParser(&body)
-	if err != nil {
-		return ctx.Status(400).SendString("Los datos enviados son invalidos")
-	}
-
-	// * find user for email
-	var user *models.User = new(models.User)
-	tx := database.DBPostgres.Table("users").Select("id", "confirmed_email_secret").Where("email = ?", body.Email).First(&user)
-	if tx.Error != nil {
-		return ctx.Status(400).SendString("Los datos enviados son invalidos")
-	}
-
-	// * comparate secrets
-	if user.ConfirmedEmailSecret != body.Id {
+	// * validate params
+	if len(ctx.Params("id")) < 5 {
 		return ctx.Status(400).SendString("Los datos enviados son invalidos")
 	}
 
 	// * update user with confirmed email
-	txUpdate := database.DBPostgres.Where("id = ?", user.Id).UpdateColumn("confirmed_email", true)
+	tx := database.DBPostgres.Table("users").Where("confirmed_email_secret = ?", ctx.Params("id")).UpdateColumn("confirmed_email", true)
 	if tx.Error != nil {
-		utils.ErrorEndPoint("confirmate email", txUpdate.Error)
+		utils.ErrorEndPoint("confirmate email", tx.Error)
 		return ctx.Status(400).SendString("Los datos enviados son invalidos")
 	}
 
@@ -329,7 +317,7 @@ func ChangePassword(ctx *fiber.Ctx, validator *validate.Validate) error {
 
 	// * find user for id
 	var user *models.User = new(models.User)
-	tx := database.DBPostgres.Select("created", "password").Where("id = ?", dataToken.Id).First(&user)
+	tx := database.DBPostgres.Table("users").Select("created", "password").Where("id = ?", dataToken.Id).First(&user)
 	if tx.Error != nil {
 		utils.ErrorEndPoint("chage password", err)
 		return ctx.Status(400).SendString("Ha ocurrido un error")
@@ -399,6 +387,13 @@ func ChangeEmail(ctx *fiber.Ctx, validator *validate.Validate) error {
 		return ctx.Status(400).SendString("Los emails no son iguales")
 	}
 
+	// * get user email
+	var user *models.User = new(models.User)
+	txU := database.DBPostgres.Table("users").Select("email").Where("id = ?", dataToken.Id).First(user)
+	if txU.Error != nil {
+		return ctx.Status(500).SendString("Ha ocurrido un error al cambiar la contraseña")
+	}
+
 	// * change confirmed_email
 	tx := database.DBPostgres.Table("users").Where("id = ?", dataToken.Id).UpdateColumn("confirmed_email", false)
 	if tx.Error != nil {
@@ -410,6 +405,13 @@ func ChangeEmail(ctx *fiber.Ctx, validator *validate.Validate) error {
 	tx = database.DBPostgres.Table("users").Where("id = ?", dataToken.Id).UpdateColumn("confirmed_email_secret", uuid.NewString())
 	if tx.Error != nil {
 		utils.ErrorEndPoint("chage email > change confirmed_email_secret", err)
+		return ctx.Status(500).SendString("Ha ocurrido un error al cambiar la contraseña")
+	}
+
+	// * change last email
+	txLast := database.DBPostgres.Table("users").Where("id = ?", dataToken.Id).UpdateColumn("last_email", user.Email)
+	if txLast.Error != nil {
+		utils.ErrorEndPoint("chage email > change last_email", err)
 		return ctx.Status(500).SendString("Ha ocurrido un error al cambiar la contraseña")
 	}
 
@@ -429,11 +431,6 @@ type BodyRegister struct {
 	Email          string `json:"email" validate:"required,min=5"`
 	Password       string `json:"password" validate:"required,min=8"`
 	RepeatPassword string `json:"repeatPassword" validate:"required,min=8"`
-}
-
-type BodyConfirmMail struct {
-	Email string `json:"email" validate:"required,min=5"`
-	Id    string `json:"id" validate:"required,min=5"`
 }
 
 type BodyLogin struct {

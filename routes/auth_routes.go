@@ -11,7 +11,7 @@ func AuthRoutes(app fiber.Router, validator *validate.Validate) {
 
 	app.Post("/register-moderator", func(ctx *fiber.Ctx) error { return controllers.RegisterModerator(ctx, validator) })
 
-	app.Post("/email-confirmation", func(ctx *fiber.Ctx) error { return controllers.EmailConfirmation(ctx, validator) })
+	app.Get("/email-confirmation/:id", func(ctx *fiber.Ctx) error { return controllers.EmailConfirmation(ctx, validator) })
 
 	app.Post("/login", func(ctx *fiber.Ctx) error { return controllers.Login(ctx, validator) })
 

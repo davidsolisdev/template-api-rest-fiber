@@ -18,14 +18,18 @@ func DecodedToken(token string) (claims *ClaimsJwt, err error) {
 		return nil, errors.New("no se puede extraer la información del token")
 	}
 
-	idfloat := data["id"].(float64)
+	// * extract id
+	idfloat := data["Id"].(float64)
 	id, e := strconv.Atoi(fmt.Sprintf("%v", idfloat))
 	if e != nil {
 		return nil, e
 	}
 
+	// * extract expiration time
+	_ = data["exp"].(float64)
+
 	(*claims).Id = uint(id)
-	//TODO: extraer datos faltantes
+	//TODO: asignar la expiracion del token
 
 	return claims, err
 }

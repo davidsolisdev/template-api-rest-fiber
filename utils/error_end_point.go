@@ -1,7 +1,7 @@
 package utils
 
-import "log"
+import "fmt"
 
 func ErrorEndPoint(endPoint string, err error) {
-	log.Fatal(endPoint + ": " + err.Error())
+	fmt.Println(endPoint + ": " + err.Error())
 }
