@@ -7,6 +7,7 @@ import (
 	"github.com/davidsolisdev/template-api-rest-fiber/app/models"
 	"github.com/davidsolisdev/template-api-rest-fiber/app/static"
 	"github.com/davidsolisdev/template-api-rest-fiber/internal/database"
+	"github.com/davidsolisdev/template-api-rest-fiber/internal/entity"
 	"github.com/davidsolisdev/template-api-rest-fiber/pkg/utils"
 	validate "github.com/go-playground/validator/v10"
 	"github.com/gofiber/fiber/v2"
@@ -57,7 +58,7 @@ func RegisterUser(ctx *fiber.Ctx, validator *validate.Validate) error {
 
 	// * create new user without confirmed email
 	var confirmedemailsecret string = uuid.NewString()
-	tx := database.DBPostgres.Table("users").Create(&models.User{
+	tx := database.DBPostgres.Table("users").Create(&entity.User{
 		Id:                   0,
 		Name:                 body.Name,
 		LastName:             body.LastName,
@@ -128,7 +129,7 @@ func RegisterModerator(ctx *fiber.Ctx, validator *validate.Validate) error {
 
 	// * create new user without confirmed email
 	var confirmedemailsecret string = uuid.NewString()
-	tx := database.DBPostgres.Table("users").Create(&models.User{
+	tx := database.DBPostgres.Table("users").Create(&entity.User{
 		Id:                   0,
 		Name:                 body.Name,
 		LastName:             body.LastName,
@@ -242,8 +243,8 @@ func Login(ctx *fiber.Ctx, validator *validate.Validate) error {
 	return ctx.Status(200).SendString(token)
 }
 
-// @Summary Recuperar contraseña
-// @Description Ruta para recuperar la contraseña del usuario
+// @Summary Enviar correo para recuperar contraseña
+// @Description Ruta para enviar el correo de  recuperación de contraseña del usuario
 // @Tags Auth
 // @Accept json
 // @Produce json
@@ -252,7 +253,7 @@ func Login(ctx *fiber.Ctx, validator *validate.Validate) error {
 // @Failure 400 {string} string
 // @Failure 500 {string} string
 // @Router /recover-password [post]
-func RecoverPassword(ctx *fiber.Ctx, validator *validate.Validate) error {
+func SendEmailRecoverPassword(ctx *fiber.Ctx, validator *validate.Validate) error {
 	// * body validation
 	var body *BodyRecoverPassword = new(BodyRecoverPassword)
 	err := ctx.BodyParser(&body)
@@ -264,13 +265,43 @@ func RecoverPassword(ctx *fiber.Ctx, validator *validate.Validate) error {
 		return ctx.Status(400).SendString("Los datos enviados son incorrectos")
 	}
 
-	// * send recover password mail
-	var bodyEmail string = static.EmailRecoverPassword()
-	_, err = utils.SendEmail(&utils.NewEmail{To: body.Email, Subject: "Recuperación de contraseña"}, bodyEmail)
+	// * find user
+	var user *models.User = new(models.User)
+	tx := database.DBPostgres.Table("users").Select("id", "created").Where("email = ?", body.Email).First(user)
+	if tx.Error != nil {
+		return ctx.Status(400).SendString("Los datos enviados son incorrectos")
+	}
+
+	// * create token
+	token, err := utils.CreateToken(utils.ClaimsJwt{
+		Id: user.Id,
+		RegisteredClaims: jwt.RegisteredClaims{
+			ExpiresAt: &jwt.NumericDate{Time: time.Now().Add(time.Minute * 30)},
+		},
+	})
 	if err != nil {
-		utils.ErrorEndPoint("recover password", err)
+		utils.ErrorEndPoint("send email recover password -> create token", err)
 		return ctx.Status(500).SendString("Error interno al enviar el correo, intenta de nuevo")
 	}
+
+	// * send recover password mail
+	var bodyEmail string = static.EmailRecoverPassword(body.Email)
+	_, err = utils.SendEmail(&utils.NewEmail{To: body.Email, Subject: "Recuperación de contraseña"}, bodyEmail)
+	if err != nil {
+		utils.ErrorEndPoint("send email recover password", err)
+		return ctx.Status(500).SendString("Error interno al enviar el correo, intenta de nuevo")
+	}
+
+	// * create and set token on response cookie
+	var cookieAuth fiber.Cookie = fiber.Cookie{
+		Name:     "RecoverAuth",
+		Value:    token,
+		Path:     "/",
+		Expires:  time.Now().Add(time.Minute * 30),
+		Secure:   true,
+		HTTPOnly: true,
+	}
+	ctx.Cookie(&cookieAuth)
 
 	return ctx.Status(200).SendString("Correo de recuperación ha sido enviado")
 }
@@ -301,7 +332,10 @@ func ChangePassword(ctx *fiber.Ctx, validator *validate.Validate) error {
 	// * get token of cookies
 	var token string = ctx.Cookies("Auth")
 	if len(token) < 8 {
-		return ctx.Status(401).SendString("No has enviado tu token")
+		token = ctx.Cookies("RecoverAuth")
+		if len(token) < 8 {
+			return ctx.Status(401).SendString("No has enviado tu token")
+		}
 	}
 
 	// * extract data of token
@@ -316,7 +350,7 @@ func ChangePassword(ctx *fiber.Ctx, validator *validate.Validate) error {
 	}
 
 	// * find user for id
-	var user *models.User = new(models.User)
+	var user *entity.User = new(entity.User)
 	tx := database.DBPostgres.Table("users").Select("created", "password").Where("id = ?", dataToken.Id).First(&user)
 	if tx.Error != nil {
 		utils.ErrorEndPoint("chage password", err)
@@ -388,7 +422,7 @@ func ChangeEmail(ctx *fiber.Ctx, validator *validate.Validate) error {
 	}
 
 	// * get user email
-	var user *models.User = new(models.User)
+	var user *entity.User = new(entity.User)
 	txU := database.DBPostgres.Table("users").Select("email").Where("id = ?", dataToken.Id).First(user)
 	if txU.Error != nil {
 		return ctx.Status(500).SendString("Ha ocurrido un error al cambiar la contraseña")

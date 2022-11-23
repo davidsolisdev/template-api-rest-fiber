@@ -1,5 +1,5 @@
 package static
 
-func EmailRecoverPassword() string {
+func EmailRecoverPassword(email string) string {
 	return ""
 }

@@ -15,5 +15,5 @@ func AuthRoutes(app fiber.Router, validator *validate.Validate) {
 
 	app.Post("/login", func(ctx *fiber.Ctx) error { return controllers.Login(ctx, validator) })
 
-	app.Post("/recover-password", func(ctx *fiber.Ctx) error { return controllers.RecoverPassword(ctx, validator) })
+	app.Post("/send-email-recover-password", func(ctx *fiber.Ctx) error { return controllers.SendEmailRecoverPassword(ctx, validator) })
 }
