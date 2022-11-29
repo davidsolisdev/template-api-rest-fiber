@@ -22,6 +22,7 @@ func SendEmail(email *NewEmail, bodyHtml string) (bool, error) {
 	if err != nil {
 		return false, err
 	}
+	defer smtp.Close()
 
 	// create new mail
 	var eMail *mail.Email = mail.NewMSG()
